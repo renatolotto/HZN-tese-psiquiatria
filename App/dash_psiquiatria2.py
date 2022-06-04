@@ -62,11 +62,12 @@ def main():
     options1 = st.selectbox('2 -Escolha o tipo de base que deseja fazer o download',
          ('Dados Entrega','Dados Apresentacao'), 1)
 
-    @st.cache
+    # @st.cache
     def load_col():
         col = pd.read_excel('bases_download_novos nomes_220527.xlsx')
         return col
     col=load_col()
+    # st.write(col)
 
     dict_col_name = col[(col['coluna']!='x')&(col['coluna']!=col['new name'])&(col['coluna'].notna())&(col['new name'].notna())]
     dict_col_name = dict_col_name.set_index('coluna')['new name'].to_dict()
@@ -280,7 +281,23 @@ def main():
     #ordenando colunas
     df3.drop(columns=['parou_etapa_4','parou_etapa_6A','parou_etapa_6B'],inplace=True)
     # st.write(df3.columns[-14:])
-        
+
+    #Encontrando %s de encontramentos
+    # encontramento_RF = 100*df3['CNPJ'].notnull().sum()/df3.shape[0]
+    # encontramento_GMN = 100*df3['URL Site'].notnull().sum()/df3.shape[0]
+    # encontramento_Escavador = 100*df3[df3['processos']!='Não foi possível identificar processos na base do escavador'].shape[0]/df3.shape[0]
+    # encontramento_Transunion = 100*df3['faturamento_presumido'].notnull().sum()/df3.shape[0]
+    # st.write('Encontramentos')
+    # st.write('RF:',round(encontramento_RF,2),'%')
+    # st.write('GMN:',round(encontramento_GMN,2),'%')
+    # st.write('Escavador:',round(encontramento_Escavador,2),'%')
+    # st.write('Transunion:',round(encontramento_Transunion,2),'%')
+
+    # Fuzzys
+    # Nome: CNES vs GMN (OK, coutinho já incluiu na base)
+    # 
+
+
     #df total (19k explicando qual dado que foi filtrado)        
     df_xlsx = df3.sort_values(by = ['base_referencia_97', '# Leitos SM não SUS'], ascending = [False , False])
     #filtrando colunas
