@@ -7,6 +7,8 @@ from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 import base64
 import io
+from fuzzywuzzy import fuzz
+from unidecode import unidecode
     
 st.set_page_config(page_title='Dashboard SM') #layout="wide",
 
@@ -129,9 +131,9 @@ def main():
     ##ETAPA 4
     st.subheader('Etapa 4: Seleção de empresas por # de leitos e profissionais SM')
 
-    lm = st.slider('Mínimo # de Leitos Saúde Mental (exSUS)',0,100)
+    lm = st.slider('Mínimo # de Leitos Saúde Mental (exSUS)',1,100)
     st.write('ou')
-    fm = st.slider('Mínimo # de funcionários Saúde Mental',0,100)
+    fm = st.slider('Mínimo # de funcionários Saúde Mental',1,100)
 
     df3_show1 = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))].groupby('Natureza Jurídica').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})#[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))]
     df3_show1 = df3_show1.append(pd.DataFrame([['TOTAL',df3_show1['Estabelecimentos'].sum(),df3_show1['Leitos SM exSUS'].sum(),df3_show1['Funcionários SM'].sum()]], columns = df3_show1.columns))
@@ -185,6 +187,19 @@ def main():
 
     df5A = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))& #regra da etapa anterior
         (df3.leitos_interesse_sus >= lsm)&(df3.percentual_sus <= mls)&(df3.percentual_sm >= mlsm)&(df3.situacao=='ATIVA')]#regra da etapa atual
+   
+    # calculo de encontramento
+    # encontramento_RF = 100*df5A['CNPJ'].notnull().sum()/df5A.shape[0]
+    # encontramento_GMN = 100*df5A['URL Site'].notnull().sum()/df5A.shape[0]
+    # encontramento_Escavador = 100*df5A[df5A['processos']!='Não foi possível identificar processos na base do escavador'].shape[0]/df5A.shape[0]
+    # encontramento_Transunion = 100*df5A['faturamento_presumido'].notnull().sum()/df5A.shape[0]
+    # st.write('Encontramentos')
+    # st.write('df_A_lenght',df5A.shape[0])
+    # st.write('RF:',round(encontramento_RF,2),'%')
+    # st.write('GMN:',round(encontramento_GMN,2),'%')
+    # st.write('Escavador:',round(encontramento_Escavador,2),'%')
+    # st.write('Transunion:',round(encontramento_Transunion,2),'%')
+
     df6 = df5A.groupby('base_referencia_97').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})
     df6 = df6.append(pd.DataFrame([['total',df6['Estabelecimentos'].sum(),df6['Leitos SM exSUS'].sum(),df6['Funcionários SM'].sum()]], columns = df6.columns))
     st.table(df6)
@@ -221,6 +236,18 @@ def main():
     lp = st.slider('Limite de # de Processos',0,1000,5000)
     df5B = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))& #regra da etapa anterior
         (df3['Natureza Jurídica'].isin(options))&(df3.leitos_interesse_sus <= lsm)&(df3.funci_interesse/df['TOTAL FUNCIONARIOS'] >= pp/100)&(df3.funci_interesse >= mps)&(df3['MEDICO PSIQUIATRA'] >= mp)&(df3.processos.apply(lambda x: 0 if type(x) == str else x) <= lp)&(df3.situacao=='ATIVA')]
+    
+    # calculo de encontramento
+    # encontramento_RF = 100*df5B['CNPJ'].notnull().sum()/df5B.shape[0]
+    # encontramento_GMN = 100*df5B['URL Site'].notnull().sum()/df5B.shape[0]
+    # encontramento_Escavador = 100*df5B[df5B['processos']!='Não foi possível identificar processos na base do escavador'].shape[0]/df5B.shape[0]
+    # encontramento_Transunion = 100*df5B['faturamento_presumido'].notnull().sum()/df5B.shape[0]
+    # st.write('Encontramentos')
+    # st.write('df_b_lenght',df5B.shape[0])
+    # st.write('RF:',round(encontramento_RF,2),'%')
+    # st.write('GMN:',round(encontramento_GMN,2),'%')
+    # st.write('Escavador:',round(encontramento_Escavador,2),'%')
+    # st.write('Transunion:',round(encontramento_Transunion,2),'%')
 
     df6 = df5B.groupby('base_referencia_97').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})
     df6 = df6.append(pd.DataFrame([['total',df6['Estabelecimentos'].sum(),df6['Leitos SM exSUS'].sum(),df6['Funcionários SM'].sum()]], columns = df6.columns))
@@ -244,9 +271,11 @@ def main():
     st.download_button(label='📥 Download estabelecimentos Grupo B',
                                     data=df_xlsx ,
                                     file_name= 'ativos_B.xlsx')
+
+    
     
     # ETAPA 7 - DOWNLOAD DE BASE COMPLETA 19K COM MOTIVOS
-    st.subheader('Dowload de base de {} estabelecimentos apontando onde foram filtrados'.format(df3.shape[0]))
+    st.subheader('Dowload de base de {} estabelecimentos de sáude mental'.format(df3.shape[0]))
 
     #filtro etapa 4
     df3['parou_etapa_4'] = np.where((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm),'','4')
@@ -288,6 +317,7 @@ def main():
     # encontramento_Escavador = 100*df3[df3['processos']!='Não foi possível identificar processos na base do escavador'].shape[0]/df3.shape[0]
     # encontramento_Transunion = 100*df3['faturamento_presumido'].notnull().sum()/df3.shape[0]
     # st.write('Encontramentos')
+    # st.write(df3.shape[0])
     # st.write('RF:',round(encontramento_RF,2),'%')
     # st.write('GMN:',round(encontramento_GMN,2),'%')
     # st.write('Escavador:',round(encontramento_Escavador,2),'%')
