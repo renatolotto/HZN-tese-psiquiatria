@@ -116,28 +116,28 @@ def main():
     # df3 = df3[cols_to_start]
 
     ##ETAPA 3
-    st.subheader('Etapa 3: Seleção de Estabelecimentos Ativos (RF) e exclusão de Empresas Publicas e Pessoas Fisicas ')
-
-    df3 = df3[(df3.situacao=='ATIVA')]
-
-    df3_show = df3.groupby('Natureza Jurídica').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})#[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))]
-    df3_show = df3_show.append(pd.DataFrame([['TOTAL',df3_show['Estabelecimentos'].sum(),df3_show['Leitos SM exSUS'].sum(),df3_show['Funcionários SM'].sum()]], columns = df3_show.columns))
-    st.table(df3_show.rename(columns ={'Natureza Jurídica':'Tipo de estabelecimento'} ))
-
-    df3['percentual_sus'] = 100*df3.leitos_total_SUS/df3.leitos_total
-    df3['percentual_sm'] = 100*(df3.leitos_interesse+df3.leitos_sus)/df3.leitos_total
+    st.subheader('Etapa 3: Exclusao de Empresas Públicas e Pessoas Fisicas Seleção de empresas por # de leitos e profissionais SM, exclusão empresas públicas/PFs')
+    df3 = df3[df3['Natureza Jurídica'].isin(['ENTIDADES EMPRESARIAIS','ENTIDADES SEM FINS LUCRATIVOS'])]
     
-
-    ##ETAPA 4
-    st.subheader('Etapa 4: Seleção de empresas por # de leitos e profissionais SM')
-
     lm = st.slider('Mínimo # de Leitos Saúde Mental (exSUS)',1,100)
     st.write('ou')
     fm = st.slider('Mínimo # de funcionários Saúde Mental',1,100)
 
+    df3['percentual_sus'] = 100*df3.leitos_total_SUS/df3.leitos_total
+    df3['percentual_sm'] = 100*(df3.leitos_interesse+df3.leitos_sus)/df3.leitos_total
+
     df3_show1 = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))].groupby('Natureza Jurídica').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})#[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))]
     df3_show1 = df3_show1.append(pd.DataFrame([['TOTAL',df3_show1['Estabelecimentos'].sum(),df3_show1['Leitos SM exSUS'].sum(),df3_show1['Funcionários SM'].sum()]], columns = df3_show1.columns))
     st.table(df3_show1.rename(columns ={'Natureza Jurídica':'Tipo de estabelecimento'} ))
+
+    ##ETAPA 4
+    st.subheader('Etapa 4: Seleção de Estabelecimentos Ativos (RF)')
+    
+    df3 = df3[(df3.situacao=='ATIVA')]
+
+    df3_show = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))].groupby('Natureza Jurídica').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})#[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))]
+    df3_show = df3_show.append(pd.DataFrame([['TOTAL',df3_show['Estabelecimentos'].sum(),df3_show['Leitos SM exSUS'].sum(),df3_show['Funcionários SM'].sum()]], columns = df3_show.columns))
+    st.table(df3_show.rename(columns ={'Natureza Jurídica':'Tipo de estabelecimento'} ))
 
     ##ETAPA 5
     st.subheader('Etapa 5: Divisão de estabelecimentos em grupos A e B')

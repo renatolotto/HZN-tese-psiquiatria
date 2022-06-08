@@ -1,0 +1,2 @@
+SELECT *,(leitos_saude_mental + leitos_hospital_dia + leitos_psiquiatria + leitos_neurologia + leitos_geriatria + leitos_geriatria_dia) as leitos_interesse, ([MEDICO NEUROLOGISTA] + [MEDICO PSIQUIATRA] + [MEDICO NEUROFISIOLOGISTA CLINICO] + [PSICOLOGO EDUCACIONAL] + [PSICOLOGO CLINICO] + [PSICOLOGO HOSPITALAR] + [PSICOLOGO SOCIAL] + [PSICOLOGO DO TRABALHO] + [NEUROPSICOLOGO] + PSICANALISTA + [PSICOLOGO ACUMPUNTURISTA]) AS funci_interesse from data d
+where (leitos_interesse >= 1 or funci_interesse >= 1) and [Natureza Jurídica] in (2,3) 
