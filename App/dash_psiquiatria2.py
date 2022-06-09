@@ -94,7 +94,7 @@ def main():
 
     @st.cache
     def load_df():
-        df = pd.read_csv('base.csv', sep = ';', encoding = 'latin1')
+        df = pd.read_csv('base2.csv',dtype={'cnpj': object,'CNPJ': object,'cep': object,'CEP': object})#, sep = ';', encoding = 'latin1'
 
         df['leitos_interesse_sus'] = df['leitos_interesse'] - df['leitos_sus']
         df['leitos_interesse'] = df['leitos_interesse'].fillna(0)
@@ -341,6 +341,7 @@ def main():
                                     data=df_xlsx ,
                                     file_name= 'estabelecimentos_saude_mental.xlsx')
 
+    # st.write(df3['cnpj'].sample(20))
 
 login_blocks = generate_login_block()
 password = login(login_blocks)
