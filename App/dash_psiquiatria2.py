@@ -94,7 +94,7 @@ def main():
 
     @st.cache
     def load_df():
-        df = pd.read_csv('base2.csv',dtype={'cnpj': object,'CNPJ': object,'cep': object,'CEP': object})#, sep = ';', encoding = 'latin1'
+        df = pd.read_csv('base2.csv',dtype={'cnpj': object,'CNPJ': object,'cep': object,'CEP': object,'CNPJ_8_Digitos':object})#, sep = ';', encoding = 'latin1'
 
         df['leitos_interesse_sus'] = df['leitos_interesse'] - df['leitos_sus']
         df['leitos_interesse'] = df['leitos_interesse'].fillna(0)
