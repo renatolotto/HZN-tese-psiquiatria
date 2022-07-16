@@ -10,7 +10,7 @@ import io
 from fuzzywuzzy import fuzz
 from unidecode import unidecode
     
-st.set_page_config(page_title='Dashboard SM') #layout="wide",
+st.set_page_config(page_title='!!!Dashboard SM') #layout="wide",
 
 
 def is_authenticated(password):
@@ -133,28 +133,30 @@ def main():
     ##ETAPA 4
     st.subheader('Etapa 4: Seleção de Estabelecimentos Ativos (RF)')
     
-    df3 = df3[(df3.situacao=='ATIVA')]
+    df4 = df3[(df3.situacao=='ATIVA')]
 
-    df3_show = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))].groupby('Natureza Jurídica').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})#[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))]
-    df3_show = df3_show.append(pd.DataFrame([['TOTAL',df3_show['Estabelecimentos'].sum(),df3_show['Leitos SM exSUS'].sum(),df3_show['Funcionários SM'].sum()]], columns = df3_show.columns))
-    st.table(df3_show.rename(columns ={'Natureza Jurídica':'Tipo de estabelecimento'} ))
+    df4_show = df4[((df4.funci_interesse >= fm)|(df4.leitos_interesse_sus >= lm))].groupby('Natureza Jurídica').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})#[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))]
+    df4_show = df4_show.append(pd.DataFrame([['TOTAL',df4_show['Estabelecimentos'].sum(),df4_show['Leitos SM exSUS'].sum(),df4_show['Funcionários SM'].sum()]], columns = df4_show.columns))
+    st.table(df4_show.rename(columns ={'Natureza Jurídica':'Tipo de estabelecimento'} ))
 
     ##ETAPA 5
     st.subheader('Etapa 5: Divisão de estabelecimentos em grupos A e B')
     st.write('Use o filtro abaixo para dividir os grupos.')
     lsm = st.slider('# de leitos SM exSUS para classificar estabelecimentos',0,100, 10)
 
-    
     df3['grupo leitos'] = np.where(df3.leitos_interesse_sus  >= lsm , str(lsm)+' Leitos ou mais (Grupo A)', 'Menos de '+str(lsm)+' leitos (Grupo B)')
     df3['Grupo'] = np.where(df3.leitos_interesse_sus  >= lsm , 'A', 'B')
+    
+    df4['grupo leitos'] = np.where(df4.leitos_interesse_sus  >= lsm , str(lsm)+' Leitos ou mais (Grupo A)', 'Menos de '+str(lsm)+' leitos (Grupo B)')
+    df4['Grupo'] = np.where(df4.leitos_interesse_sus  >= lsm , 'A', 'B')
 
-    df4 = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))].groupby('grupo leitos').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM','grupo leitos':'Leitos'})
-    df4 = df4.append(pd.DataFrame([['Total',df4['Estabelecimentos'].sum(),df4['Leitos SM exSUS'].sum(),df4['Funcionários SM'].sum()]], columns = df4.columns))
-    st.table(df4.rename(columns = {'index':'Leitos'}))
+    df5 = df4[((df4.funci_interesse >= fm)|(df4.leitos_interesse_sus >= lm))].groupby('grupo leitos').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM','grupo leitos':'Leitos'})
+    df5 = df5.append(pd.DataFrame([['Total',df5['Estabelecimentos'].sum(),df5['Leitos SM exSUS'].sum(),df5['Funcionários SM'].sum()]], columns = df5.columns))
+    st.table(df5.rename(columns = {'index':'Leitos'}))
 
     #MAPA ETAPA 5
     st.write('Distribuição dos estabelecimentos: Grupos A e B')
-    fig = px.scatter_mapbox(df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))], lat="latitude", lon="longitude", zoom=9, title = 'Distribuição dos estabelecimentos ativos', color ='grupo leitos', hover_name = 'Nome Fantasia', hover_data = ['Município','UF','leitos_interesse','funci_interesse'])
+    fig = px.scatter_mapbox(df4[((df4.funci_interesse >= fm)|(df4.leitos_interesse_sus >= lm))], lat="latitude", lon="longitude", zoom=9, title = 'Distribuição dos estabelecimentos ativos', color ='grupo leitos', hover_name = 'Nome Fantasia', hover_data = ['Município','UF','leitos_interesse','funci_interesse'])
 
     fig.update_layout(
         mapbox = {'style': "open-street-map", 'center': {'lon': -48.5, 'lat': -14.5}, 'zoom': 3},
@@ -165,7 +167,7 @@ def main():
     st.plotly_chart(fig, use_container_width=True)
 
     ##DOWNLOAD ETAPA 5
-    df_xlsx_filt = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))].sort_values(by = ['base_referencia_97', '# Leitos SM não SUS'], ascending = [False , False])
+    df_xlsx_filt = df4[((df4.funci_interesse >= fm)|(df4.leitos_interesse_sus >= lm))].sort_values(by = ['base_referencia_97', '# Leitos SM não SUS'], ascending = [False , False])
     #filtrando colunas
     cols_to_show = col[(col[options1] == 1.0)&(col.coluna != 'x')&(col.coluna.notnull())&(col.coluna != 'etapa_filtrado')]['coluna'].to_list()
     df_xlsx_filt = df_xlsx_filt[cols_to_show]
@@ -185,8 +187,8 @@ def main():
     mlsm = st.slider('Mínimo % de Leitos Saúde Mental / Total de Leitos',0,100,35)
 
 
-    df5A = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))& #regra da etapa anterior
-        (df3.leitos_interesse_sus >= lsm)&(df3.percentual_sus <= mls)&(df3.percentual_sm >= mlsm)&(df3.situacao=='ATIVA')]#regra da etapa atual
+    df6A = df4[((df4.funci_interesse >= fm)|(df4.leitos_interesse_sus >= lm))& #regra da etapa anterior
+        (df4.leitos_interesse_sus >= lsm)&(df4.percentual_sus <= mls)&(df4.percentual_sm >= mlsm)&(df4.situacao=='ATIVA')]#regra da etapa atual
    
     # calculo de encontramento
     # encontramento_RF = 100*df5A['CNPJ'].notnull().sum()/df5A.shape[0]
@@ -200,12 +202,12 @@ def main():
     # st.write('Escavador:',round(encontramento_Escavador,2),'%')
     # st.write('Transunion:',round(encontramento_Transunion,2),'%')
 
-    df6 = df5A.groupby('base_referencia_97').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})
+    df6 = df6A.groupby('base_referencia_97').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})
     df6 = df6.append(pd.DataFrame([['total',df6['Estabelecimentos'].sum(),df6['Leitos SM exSUS'].sum(),df6['Funcionários SM'].sum()]], columns = df6.columns))
     st.table(df6)
 
     st.write('Distribuição dos estabelecimentos tipo A')
-    fig = px.scatter_mapbox(df5A, lat="latitude", lon="longitude", zoom=9, title = 'Distribuição dos estabelecimentos ativos', color = 'base_referencia_97', hover_name = 'Nome Fantasia', hover_data = ['Município','UF','leitos_interesse','funci_interesse'])
+    fig = px.scatter_mapbox(df6A, lat="latitude", lon="longitude", zoom=9, title = 'Distribuição dos estabelecimentos ativos', color = 'base_referencia_97', hover_name = 'Nome Fantasia', hover_data = ['Município','UF','leitos_interesse','funci_interesse'])
     fig.update_layout(
         mapbox = {'style': "open-street-map", 'center': {'lon': -48.5, 'lat': -14.5}, 'zoom': 3},
         showlegend = True,
@@ -216,11 +218,11 @@ def main():
     #df etapa 6A
     #filtrando colunas
     cols_to_show = col[(col[options1] == 1.0)&(col.coluna != 'x')&(col.coluna.notnull())&(col.coluna != 'etapa_filtrado')]['coluna'].to_list()
-    df5A = df5A[cols_to_show]
-    df5A = df5A.rename(columns=dictfilt(dict_col_name, list(df5A.columns)))
-    df_xlsx5a = to_excel(df5A.sort_values(by = ['base_referencia_97', '# Leitos SM não SUS'], ascending = [False , False]))
+    df6A = df6A[cols_to_show]
+    df6A = df6A.rename(columns=dictfilt(dict_col_name, list(df6A.columns)))
+    df_xlsx6a = to_excel(df6A.sort_values(by = ['base_referencia_97', '# Leitos SM não SUS'], ascending = [False , False]))
     st.download_button(label='📥 Download estabelecimentos Grupo A',
-                                    data=df_xlsx5a ,
+                                    data=df_xlsx6a ,
                                     file_name= 'ativos_A.xlsx')
     
     ##ETAPA 6B
@@ -234,8 +236,8 @@ def main():
     mp = st.slider('# Minimo Psiquiatras',1,100,1)
     pp = st.slider('Mínimo % Profissionais de SM',1,100,30)
     lp = st.slider('Limite de # de Processos',0,1000,5000)
-    df5B = df3[((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))& #regra da etapa anterior
-        (df3['Natureza Jurídica'].isin(options))&(df3.leitos_interesse_sus <= lsm)&(df3.funci_interesse/df['TOTAL FUNCIONARIOS'] >= pp/100)&(df3.funci_interesse >= mps)&(df3['MEDICO PSIQUIATRA'] >= mp)&(df3.processos.apply(lambda x: 0 if type(x) == str else x) <= lp)&(df3.situacao=='ATIVA')]
+    df6B = df4[((df4.funci_interesse >= fm)|(df4.leitos_interesse_sus >= lm))& #regra da etapa anterior
+        (df4['Natureza Jurídica'].isin(options))&(df4.leitos_interesse_sus <= lsm)&(df4.funci_interesse/df['TOTAL FUNCIONARIOS'] >= pp/100)&(df4.funci_interesse >= mps)&(df4['MEDICO PSIQUIATRA'] >= mp)&(df4.processos.apply(lambda x: 0 if type(x) == str else x) <= lp)&(df4.situacao=='ATIVA')]
     
     # calculo de encontramento
     # encontramento_RF = 100*df5B['CNPJ'].notnull().sum()/df5B.shape[0]
@@ -249,12 +251,12 @@ def main():
     # st.write('Escavador:',round(encontramento_Escavador,2),'%')
     # st.write('Transunion:',round(encontramento_Transunion,2),'%')
 
-    df6 = df5B.groupby('base_referencia_97').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})
+    df6 = df6B.groupby('base_referencia_97').agg({'cnes':'count','leitos_interesse_sus': 'sum', 'funci_interesse': 'sum'}).reset_index().rename(columns = {'cnes':'Estabelecimentos','leitos_interesse_sus': 'Leitos SM exSUS', 'funci_interesse': 'Funcionários SM'})
     df6 = df6.append(pd.DataFrame([['total',df6['Estabelecimentos'].sum(),df6['Leitos SM exSUS'].sum(),df6['Funcionários SM'].sum()]], columns = df6.columns))
     st.table(df6)
 
     st.write('Distribuição dos estabelecimentos tipo B')
-    fig = px.scatter_mapbox(df5B, lat="latitude", lon="longitude", zoom=9, title = 'Distribuição dos estabelecimentos ativos', color = 'base_referencia_97', hover_name = 'Nome Fantasia', hover_data = ['Município','UF','leitos_interesse','funci_interesse'])
+    fig = px.scatter_mapbox(df6B, lat="latitude", lon="longitude", zoom=9, title = 'Distribuição dos estabelecimentos ativos', color = 'base_referencia_97', hover_name = 'Nome Fantasia', hover_data = ['Município','UF','leitos_interesse','funci_interesse'])
     fig.update_layout(
         mapbox = {'style': "open-street-map", 'center': {'lon': -48.5, 'lat': -14.5}, 'zoom': 3},
         showlegend = True,
@@ -265,9 +267,9 @@ def main():
     #df etapa 6B
     #filtrando colunas
     cols_to_show = col[(col[options1] == 1.0)&(col.coluna != 'x')&(col.coluna.notnull())&(col.coluna != 'etapa_filtrado')]['coluna'].to_list()
-    df5B = df5B[cols_to_show]
-    df5B = df5B.rename(columns=dictfilt(dict_col_name, list(df5B.columns)))
-    df_xlsx = to_excel(df5B.sort_values(by = ['base_referencia_97', '# Psiquiatras'], ascending = [False, False]))
+    df6B = df6B[cols_to_show]
+    df6B = df6B.rename(columns=dictfilt(dict_col_name, list(df6B.columns)))
+    df_xlsx = to_excel(df6B.sort_values(by = ['base_referencia_97', '# Psiquiatras'], ascending = [False, False]))
     st.download_button(label='📥 Download estabelecimentos Grupo B',
                                     data=df_xlsx ,
                                     file_name= 'ativos_B.xlsx')
@@ -277,90 +279,47 @@ def main():
     # ETAPA 7 - DOWNLOAD DE BASE COMPLETA 19K COM MOTIVOS
     st.subheader('Dowload de base de {} estabelecimentos de sáude mental'.format(df3.shape[0]))
 
-    #filtro etapa 4
-    df3['parou_etapa_4'] = np.where((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm),'','4')
+    ##ETAPA QUE ESTAB CHEGOU
+    # df3['passou_da_3'] = np.where((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm),'1','0')
+
+    #filtro etapa 3
+    df3['passou_etapa_3'] = np.where((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm),1,0)
     # df3['filtrado motivo: # leitos SM'] = np.where(df3.leitos_interesse_sus >= lm, '', 'Menos que '+str(lm)+' leitos')#str(lm)+' leitos ou mais'
     # df3['filtrado motivo: # profissionais SM'] = np.where(df3.funci_interesse >= fm, '', 'Menos que '+str(fm)+' funcionários')#str(fm)+' funcionários ou mais'
+    #filtro_etapa_4
+    df3['passou_etapa_4'] = np.where(((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm))&(df3.situacao=='ATIVA'),1,0)
+    
     #filtros etapa 6A
-    df3['parou_etapa_6A'] = np.where(((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm))&#regra etapa anterior
-        (df3.percentual_sus  <= mls)&(df3.Grupo=='A')&(df3.percentual_sm  >= mlsm)&(df3.situacao=='ATIVA'),'','6A')#atual
+    df3['passou_etapa_6A'] = np.where(((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm))&(df3.situacao=='ATIVA')&#regra etapa anterior
+        (df3.percentual_sus  <= mls)&(df3.Grupo=='A')&(df3.percentual_sm  >= mlsm),1,0)#atual
     # df3['filtrado motivo - Máximo % de Leitos SUS (Grupo A)'] = np.where(((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm))&#regra da etapa anterior
     # (df3.percentual_sus  <= mls)&(df3.Grupo=='A') , ' ', 'Maior que '+str(mls)+'%')#regra da etapa atual
     # df3['filtrado motivo - Mínimo % de Leitos Saúde Mental / Total de Leitos (Grupo A)'] = np.where(
     #     ((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm))&#regra etapa anterior
     #     (df3.percentual_sm  >= mlsm) &(df3.Grupo=='A'),'' , 'Menor que '+str(mlsm)+'%')#etapa atual
     # filtros etapa 6B
-    df3['parou_etapa_6B'] = np.where(((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))&(df3.Grupo!='A')&#regra da etapa anterior
-    (df3['Natureza Jurídica'].isin(options))&(df3.Grupo=='B')&(df3.funci_interesse >= mps)&(df3['MEDICO PSIQUIATRA'] >= mp)&(df3.funci_interesse/df3['TOTAL FUNCIONARIOS'] >= pp/100)&(df3.processos.apply(lambda x: 0 if type(x) == str else x) <= lp),'','6B')
+    df3['passou_etapa_6B'] = np.where(((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))&(df3.situacao=='ATIVA')& #regra da etapa anterior
+    (df3['Natureza Jurídica'].isin(options))&(df3.Grupo=='B')&(df3.funci_interesse >= mps)&(df3['MEDICO PSIQUIATRA'] >= mp)&(df3.funci_interesse/df3['TOTAL FUNCIONARIOS'] >= pp/100)&(df3.processos.apply(lambda x: 0 if type(x) == str else x) <= lp),1,0)
     # df3['filtrado motivo - Natureza Jurídica (Grupo B)'] = np.where((df3['Natureza Jurídica'].isin(options)) &(df3.Grupo=='B'), '', 'Não Atende Natureza Jurídica')#Atende Natureza Jurídica
     # df3['filtrado motivo - # Mínimo Profissionais de SM (Grupo B)'] = np.where((df3.funci_interesse >= mps) &(df3.Grupo=='B'), '', 'Menos que '+str(mps)+' profissionais') #str(mps)+' profissionais ou mais' 
     # df3['filtrado motivo - # Mínimo Psiquiatras (Grupo B)'] = np.where((df3['MEDICO PSIQUIATRA'] >= mp) &(df3.Grupo=='B'), '', 'Menos que '+str(mps)+' psiquiatras')#str(mps)+' psiquiatras ou mais'
     # df3['filtrado motivo - Mínimo % Profissionais de SM (Grupo B)'] = np.where((df3.funci_interesse/df3['TOTAL FUNCIONARIOS'] >= pp/100) &(df3.Grupo=='B'),'' , 'Menor que '+str(mps)+'%')#str(mps)+'% ou mais'
     # df3['filtrado motivo - Limite de # de Processos (Grupo B)'] = np.where((df3.processos.apply(lambda x: 0 if type(x) == str else x) <= lp) &(df3.Grupo=='B'), '', 'Mais que '+str(lp)+' processos')#str(lp)+' processos ou menos'
     
-    # coluna com etapa que estab foi filtrado
+    #coluna com etapa que estab foi filtrado
     def conditions(s):
-        if s['parou_etapa_4']=='4':
+        if s['passou_etapa_3']==1 and s['passou_etapa_4']==0 and s['passou_etapa_6A']==0 and s['passou_etapa_6B']==0:
             return '3'
-        elif s['parou_etapa_4']!='4' and s['parou_etapa_6A']=='6A' and s['Grupo']=='A':
+        elif s['passou_etapa_3']==1 and s['passou_etapa_4']==1 and s['passou_etapa_6A']==0 and s['passou_etapa_6B']==0:
+            return '4'
+        elif s['passou_etapa_3']==1 and s['passou_etapa_4']==1 and s['passou_etapa_6A']==1 and s['passou_etapa_6B']==0:
             return '5'
-        elif s['parou_etapa_4']!='4' and s['parou_etapa_6B']=='6B'and s['Grupo']=='B':
+        elif s['passou_etapa_3']==1 and s['passou_etapa_4']==1 and s['passou_etapa_6A']==0 and s['passou_etapa_6B']==1:
             return '5'
-        else:
-            return ''
     df3['etapa_filtrado'] = df3.apply(conditions,axis=1)
-    
-    # df3['etapa_filtrado'] = np.where(df3['parou_etapa_4']=='4','3',
-    # np.where()
-    # )
-
-
-    # def conditions2(s):
-    #     if s['parou_etapa_4']=='4':
-    #         return '3'
-    #     elif s['parou_etapa_4']!='4' and s['parou_etapa_6A']=='6A' and s['Grupo']=='A':
-    #         return '5'
-    #     elif s['parou_etapa_4']!='4' and s['parou_etapa_6B']=='6B'and s['Grupo']=='B':
-    #         return '5'
-    #     # elif s['parou_etapa_4']!='4' and s['parou_etapa_6B']!='6B' and s['parou_etapa_6A']!='6A' and s['Grupo']=='B':
-    #     #     return '6B'
-    #     # elif s['parou_etapa_4']!='4' and s['parou_etapa_6B']!='6B' and s['parou_etapa_6A']!='6A' and s['Grupo']=='A':
-    #     #     return '6A'
-    #     else:
-    #         return ''
-    # df3['teste_etapa_22222'] = df3.apply(conditions2,axis=1)
     #ordenando colunas
-    # df3.drop(columns=['parou_etapa_4','parou_etapa_6A','parou_etapa_6B'],inplace=True)
+    # df3.drop(columns=['passou_etapa_3','passou_etapa_4','passou_etapa_6A','passou_etapa_6B'],inplace=True)
     # st.write(df3.columns[-14:])
-
-    # st.table(df3[['etapa_filtrado','Natureza Jurídica']].info())
-    # def onde_chegou(s):
-    #     if s['etapa_filtrado']=='4':
-    #         return '3'
-    #     elif s['etapa_filtrado']=='6A' or s['etapa_filtrado']=='6B':
-    #         return '5'
-    #     elif s['etapa_filtrado']=='final' & s['Grupo']=='A':
-    #         return '6A'
-    #     elif s['etapa_filtrado']=='final' & s['Grupo']=='B':
-    #         return '6B'
-    #     else:
-    #         return 'erro'
-
-    # df3['teste_etapa_22222']= df3.apply(onde_chegou,axis=1)
-
-    
-
-
-    # df3['teste_etapa_22222'] = np.where((df3['etapa_filtrado']=='4'),'3',
-    # np.where((df3['etapa_filtrado']=='6A') | (df3['etapa_filtrado']=='6B'),'5',
-    # np.where((df3['etapa_filtrado'].isnull()) & (df3['Grupo']=='A','6A',
-    # np.where((df3['etapa_filtrado'].isnull()) & (df3['Grupo']=='B','6A',''
-    # ))))
-    # )
-    # )
-
-    # df3.drop(columns=['parou_etapa_4','parou_etapa_6A','parou_etapa_6B'],inplace=True)
-
 
     #Encontrando %s de encontramentos
     # encontramento_RF = 100*df3['CNPJ'].notnull().sum()/df3.shape[0]
@@ -384,8 +343,8 @@ def main():
     #filtrando colunas
     cols_to_show = col[(col[options1] == 1.0)&(col.coluna != 'x')&(col.coluna.notnull())]['coluna'].to_list()
     ##APAGARRR
-    # extra_cols=['Grupo','parou_etapa_4','parou_etapa_6A','parou_etapa_6B','teste_etapa_22222']
-    # cols_to_show.extend(extra_cols)
+    extra_cols=['passou_etapa_3','passou_etapa_4','passou_etapa_6A','passou_etapa_6B']
+    cols_to_show.extend(extra_cols)
     # st.write(cols_to_show)
     df_xlsx = df_xlsx[cols_to_show]
     df_xlsx = df_xlsx.rename(columns=dictfilt(dict_col_name, list(df_xlsx.columns)))

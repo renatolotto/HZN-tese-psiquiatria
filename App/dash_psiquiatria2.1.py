@@ -277,8 +277,11 @@ def main():
     # ETAPA 7 - DOWNLOAD DE BASE COMPLETA 19K COM MOTIVOS
     st.subheader('Dowload de base de {} estabelecimentos de sáude mental'.format(df3.shape[0]))
 
-    #filtro etapa 4
-    df3['parou_etapa_4'] = np.where((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm),'','4')
+    ##ETAPA QUE ESTAB CHEGOU
+    df3['passou_da_3'] = np.where((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm),'1','0')
+
+    #filtro etapa 3
+    df3['parou_etapa_3'] = np.where((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm),'','3')
     # df3['filtrado motivo: # leitos SM'] = np.where(df3.leitos_interesse_sus >= lm, '', 'Menos que '+str(lm)+' leitos')#str(lm)+' leitos ou mais'
     # df3['filtrado motivo: # profissionais SM'] = np.where(df3.funci_interesse >= fm, '', 'Menos que '+str(fm)+' funcionários')#str(fm)+' funcionários ou mais'
     #filtros etapa 6A
@@ -290,7 +293,7 @@ def main():
     #     ((df3.leitos_interesse_sus >= lm) | (df3.funci_interesse >= fm))&#regra etapa anterior
     #     (df3.percentual_sm  >= mlsm) &(df3.Grupo=='A'),'' , 'Menor que '+str(mlsm)+'%')#etapa atual
     # filtros etapa 6B
-    df3['parou_etapa_6B'] = np.where(((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))&(df3.Grupo!='A')&#regra da etapa anterior
+    df3['parou_etapa_6B'] = np.where(((df3.funci_interesse >= fm)|(df3.leitos_interesse_sus >= lm))& #regra da etapa anterior
     (df3['Natureza Jurídica'].isin(options))&(df3.Grupo=='B')&(df3.funci_interesse >= mps)&(df3['MEDICO PSIQUIATRA'] >= mp)&(df3.funci_interesse/df3['TOTAL FUNCIONARIOS'] >= pp/100)&(df3.processos.apply(lambda x: 0 if type(x) == str else x) <= lp),'','6B')
     # df3['filtrado motivo - Natureza Jurídica (Grupo B)'] = np.where((df3['Natureza Jurídica'].isin(options)) &(df3.Grupo=='B'), '', 'Não Atende Natureza Jurídica')#Atende Natureza Jurídica
     # df3['filtrado motivo - # Mínimo Profissionais de SM (Grupo B)'] = np.where((df3.funci_interesse >= mps) &(df3.Grupo=='B'), '', 'Menos que '+str(mps)+' profissionais') #str(mps)+' profissionais ou mais' 
@@ -298,69 +301,18 @@ def main():
     # df3['filtrado motivo - Mínimo % Profissionais de SM (Grupo B)'] = np.where((df3.funci_interesse/df3['TOTAL FUNCIONARIOS'] >= pp/100) &(df3.Grupo=='B'),'' , 'Menor que '+str(mps)+'%')#str(mps)+'% ou mais'
     # df3['filtrado motivo - Limite de # de Processos (Grupo B)'] = np.where((df3.processos.apply(lambda x: 0 if type(x) == str else x) <= lp) &(df3.Grupo=='B'), '', 'Mais que '+str(lp)+' processos')#str(lp)+' processos ou menos'
     
-    # coluna com etapa que estab foi filtrado
+    #coluna com etapa que estab foi filtrado
     def conditions(s):
-        if s['parou_etapa_4']=='4':
+        if s['parou_etapa_3']=='3':
             return '3'
-        elif s['parou_etapa_4']!='4' and s['parou_etapa_6A']=='6A' and s['Grupo']=='A':
-            return '5'
-        elif s['parou_etapa_4']!='4' and s['parou_etapa_6B']=='6B'and s['Grupo']=='B':
-            return '5'
-        else:
-            return ''
+        elif s['parou_etapa_3']!='3' and s['parou_etapa_6A']=='6A' and s['Grupo']=='A':
+            return '6A'
+        elif s['parou_etapa_3']!='3' and s['parou_etapa_6B']=='6B'and s['Grupo']=='B':
+            return '6B'
     df3['etapa_filtrado'] = df3.apply(conditions,axis=1)
-    
-    # df3['etapa_filtrado'] = np.where(df3['parou_etapa_4']=='4','3',
-    # np.where()
-    # )
-
-
-    # def conditions2(s):
-    #     if s['parou_etapa_4']=='4':
-    #         return '3'
-    #     elif s['parou_etapa_4']!='4' and s['parou_etapa_6A']=='6A' and s['Grupo']=='A':
-    #         return '5'
-    #     elif s['parou_etapa_4']!='4' and s['parou_etapa_6B']=='6B'and s['Grupo']=='B':
-    #         return '5'
-    #     # elif s['parou_etapa_4']!='4' and s['parou_etapa_6B']!='6B' and s['parou_etapa_6A']!='6A' and s['Grupo']=='B':
-    #     #     return '6B'
-    #     # elif s['parou_etapa_4']!='4' and s['parou_etapa_6B']!='6B' and s['parou_etapa_6A']!='6A' and s['Grupo']=='A':
-    #     #     return '6A'
-    #     else:
-    #         return ''
-    # df3['teste_etapa_22222'] = df3.apply(conditions2,axis=1)
     #ordenando colunas
-    # df3.drop(columns=['parou_etapa_4','parou_etapa_6A','parou_etapa_6B'],inplace=True)
+    df3.drop(columns=['parou_etapa_4','parou_etapa_6A','parou_etapa_6B'],inplace=True)
     # st.write(df3.columns[-14:])
-
-    # st.table(df3[['etapa_filtrado','Natureza Jurídica']].info())
-    # def onde_chegou(s):
-    #     if s['etapa_filtrado']=='4':
-    #         return '3'
-    #     elif s['etapa_filtrado']=='6A' or s['etapa_filtrado']=='6B':
-    #         return '5'
-    #     elif s['etapa_filtrado']=='final' & s['Grupo']=='A':
-    #         return '6A'
-    #     elif s['etapa_filtrado']=='final' & s['Grupo']=='B':
-    #         return '6B'
-    #     else:
-    #         return 'erro'
-
-    # df3['teste_etapa_22222']= df3.apply(onde_chegou,axis=1)
-
-    
-
-
-    # df3['teste_etapa_22222'] = np.where((df3['etapa_filtrado']=='4'),'3',
-    # np.where((df3['etapa_filtrado']=='6A') | (df3['etapa_filtrado']=='6B'),'5',
-    # np.where((df3['etapa_filtrado'].isnull()) & (df3['Grupo']=='A','6A',
-    # np.where((df3['etapa_filtrado'].isnull()) & (df3['Grupo']=='B','6A',''
-    # ))))
-    # )
-    # )
-
-    # df3.drop(columns=['parou_etapa_4','parou_etapa_6A','parou_etapa_6B'],inplace=True)
-
 
     #Encontrando %s de encontramentos
     # encontramento_RF = 100*df3['CNPJ'].notnull().sum()/df3.shape[0]
@@ -383,9 +335,6 @@ def main():
     df_xlsx = df3.sort_values(by = ['base_referencia_97', '# Leitos SM não SUS'], ascending = [False , False])
     #filtrando colunas
     cols_to_show = col[(col[options1] == 1.0)&(col.coluna != 'x')&(col.coluna.notnull())]['coluna'].to_list()
-    ##APAGARRR
-    # extra_cols=['Grupo','parou_etapa_4','parou_etapa_6A','parou_etapa_6B','teste_etapa_22222']
-    # cols_to_show.extend(extra_cols)
     # st.write(cols_to_show)
     df_xlsx = df_xlsx[cols_to_show]
     df_xlsx = df_xlsx.rename(columns=dictfilt(dict_col_name, list(df_xlsx.columns)))
